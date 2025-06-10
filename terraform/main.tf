@@ -9,7 +9,7 @@ resource "aws_secretsmanager_secret" "webull" {
 }
 
 resource "aws_secretsmanager_secret_version" "webull" {
-  secret_id     = aws_secretsmanager_secret.webull.id
+  secret_id = aws_secretsmanager_secret.webull.id
   secret_string = jsonencode({
     WEBULL_USERNAME       = var.webull_username,
     WEBULL_PASSWORD       = var.webull_password,
@@ -19,7 +19,7 @@ resource "aws_secretsmanager_secret_version" "webull" {
 }
 
 resource "aws_iam_role" "lambda_exec" {
-  name = "ema_trading_lambda_exec"
+  name               = "ema_trading_lambda_exec"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
 }
 
@@ -53,14 +53,20 @@ resource "aws_iam_role_policy" "lambda_policy" {
   policy = data.aws_iam_policy_document.lambda_policy_doc.json
 }
 
+data "archive_file" "lambda_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/../src"
+  output_path = "${path.module}/lambda_package.zip"
+}
+
 resource "aws_lambda_function" "ema_trading" {
-  function_name = "ema_trading_function"
-  handler       = "src.lambda_function.handler"
-  runtime       = "python3.9"
-  role          = aws_iam_role.lambda_exec.arn
-  filename      = "${path.module}/lambda_package.zip"
-  source_code_hash = filebase64sha256("${path.module}/lambda_package.zip")
-  timeout       = 60
+  function_name    = "ema_trading_function"
+  handler          = "src.lambda_function.handler"
+  runtime          = "python3.9"
+  role             = aws_iam_role.lambda_exec.arn
+  filename         = data.archive_file.lambda_zip.output_path
+  source_code_hash = data.archive_file.lambda_zip.output_base64sha256
+  timeout          = 60
   environment {
     variables = {
       SECRET_ARN = aws_secretsmanager_secret.webull.arn
