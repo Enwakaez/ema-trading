@@ -1,4 +1,4 @@
-# EMA Trading Bot with AWS Secrets Manager
+# EMA Trading Bot Prototype
 
 ## Overview
 Automated trading application using Python, AWS Lambda, Webull API, and AWS Secrets Manager. Trades NVIDIA (NVDA) and Palantir (PLTR) based on EMA crossover and RSI signals.
