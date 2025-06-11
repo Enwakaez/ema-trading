@@ -26,6 +26,15 @@ jobs:
       - name: Terraform Init
         run: terraform -chdir=terraform init
 
+      - name: Import existing resources
+        run: |
+          terraform -chdir=terraform import aws_lambda_function.ema_trading ema_trading_function || true
+          terraform -chdir=terraform import aws_iam_role.lambda_exec ema_trading_lambda_exec || true
+          terraform -chdir=terraform import aws_iam_role_policy.lambda_policy ema_trading_lambda_exec:ema_trading_policy || true
+          terraform -chdir=terraform import aws_cloudwatch_event_rule.schedule ema_trading_schedule || true
+          terraform -chdir=terraform import aws_cloudwatch_event_target.lambda_target ema_trading_schedule/ema_trading_lambda || true
+          terraform -chdir=terraform import aws_lambda_permission.allow_cloudwatch ema_trading_function/AllowExecutionFromCloudWatch || true
+
       - name: Terraform Apply
         run: terraform -chdir=terraform apply -auto-approve -var="secret_arn=${{ secrets.SECRET_ARN }}"
 
