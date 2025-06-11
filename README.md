@@ -29,26 +29,33 @@ README.md
 
 1. **Clone** the repository.
 2. **Set** GitHub Secrets:
-   - `WEBULL_USERNAME`
-   - `WEBULL_PASSWORD`
-   - `AWS_KEY_ID`
-   - `AWS_SECRET`
+   - `SECRET_ARN` - ARN of the AWS Secrets Manager secret containing Webull and AWS credentials
+   - `AWS_ACCESS_KEY_ID`
+   - `AWS_SECRET_ACCESS_KEY`
 3. **Push** to `main`—GitHub Actions will:
-   - Initialize and apply Terraform (creating Secrets Manager secret).
+   - Import existing Lambda, IAM role, and CloudWatch schedule by name
+     before applying Terraform.
+   - Initialize and apply Terraform (using the provided Secrets Manager ARN).
    - Deploy the Lambda function.
 
 ### Provisioning Secrets
 
-The Terraform setup will create an AWS Secrets Manager secret named `webull_credentials` containing:
-- `WEBULL_USERNAME`
-- `WEBULL_PASSWORD`
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
-
-Provide these via Terraform vars (GitHub Actions):
+Terraform expects a pre-existing Secrets Manager secret with those values. Pass its ARN during apply:
 ```bash
 terraform init
-terraform apply   -var="webull_username=${{ secrets.WEBULL_USERNAME }}"   -var="webull_password=${{ secrets.WEBULL_PASSWORD }}"   -var="aws_access_key_id=${{ secrets.AWS_KEY_ID }}"   -var="aws_secret_access_key=${{ secrets.AWS_SECRET }}"
+terraform apply -var="secret_arn=${SECRET_ARN}"
+```
+
+### Importing Existing Resources
+
+If the Lambda function, IAM role, or CloudWatch schedule already exist,
+Terraform can import them by name. The CI workflow performs these imports
+automatically, but you may also run them locally:
+
+```bash
+terraform import aws_lambda_function.ema_trading ema_trading_function
+terraform import aws_iam_role.lambda_exec ema_trading_lambda_exec
+terraform import aws_cloudwatch_event_rule.schedule ema_trading_schedule
 ```
 
 ## Usage

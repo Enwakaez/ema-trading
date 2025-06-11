@@ -2,20 +2,10 @@ provider "aws" {
   region = var.aws_region
 }
 
-# Secret for Webull & AWS credentials
-resource "aws_secretsmanager_secret" "webull" {
-  name        = "webull_credentials"
-  description = "Webull and AWS access keys"
-}
 
-resource "aws_secretsmanager_secret_version" "webull" {
-  secret_id = aws_secretsmanager_secret.webull.id
-  secret_string = jsonencode({
-    WEBULL_USERNAME       = var.webull_username,
-    WEBULL_PASSWORD       = var.webull_password,
-    AWS_ACCESS_KEY_ID     = var.aws_access_key_id,
-    AWS_SECRET_ACCESS_KEY = var.aws_secret_access_key,
-  })
+# Existing secret containing Webull and AWS credentials
+data "aws_secretsmanager_secret" "webull" {
+  arn = var.secret_arn
 }
 
 resource "aws_iam_role" "lambda_exec" {
@@ -42,7 +32,7 @@ data "aws_iam_policy_document" "lambda_policy_doc" {
       "secretsmanager:GetSecretValue"
     ]
     resources = [
-      aws_secretsmanager_secret.webull.arn
+      var.secret_arn
     ]
   }
 }
@@ -69,7 +59,7 @@ resource "aws_lambda_function" "ema_trading" {
   timeout          = 60
   environment {
     variables = {
-      SECRET_ARN = aws_secretsmanager_secret.webull.arn
+      SECRET_ARN = var.secret_arn
     }
   }
 }
