@@ -33,9 +33,25 @@ README.md
    - `WEBULL_PASSWORD`
    - `AWS_KEY_ID`
    - `AWS_SECRET`
+   - *(optional)* `EXISTING_LAMBDA_ROLE` – name of an IAM role to reuse
+   - *(optional)* `EXISTING_LAMBDA_FUNCTION` – existing Lambda function name
 3. **Push** to `main`—GitHub Actions will:
    - Initialize and apply Terraform (creating Secrets Manager secret).
    - Deploy the Lambda function.
+
+### Reusing Existing Lambda Resources
+
+Set `existing_lambda_role_name` or `existing_lambda_function_name` when you
+already have these resources provisioned. Provide their values via the optional
+GitHub Secrets listed above. The workflow will import the resources into the
+Terraform state before applying changes, allowing the rest of the infrastructure
+to reference them.
+
+Example manual apply:
+```bash
+terraform apply -var="existing_lambda_role_name=my-role" \
+  -var="existing_lambda_function_name=my-func" [...]
+```
 
 ### Provisioning Secrets
 

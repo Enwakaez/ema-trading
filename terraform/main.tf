@@ -19,8 +19,20 @@ resource "aws_secretsmanager_secret_version" "webull" {
 }
 
 resource "aws_iam_role" "lambda_exec" {
+  count              = var.existing_lambda_role_name == "" ? 1 : 0
   name               = "ema_trading_lambda_exec"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
+}
+
+data "aws_iam_role" "existing" {
+  count = var.existing_lambda_role_name != "" ? 1 : 0
+  name  = var.existing_lambda_role_name
+}
+
+locals {
+  lambda_role_arn      = var.existing_lambda_role_name == "" ? aws_iam_role.lambda_exec[0].arn : data.aws_iam_role.existing[0].arn
+  lambda_function_arn  = var.existing_lambda_function_name == "" ? aws_lambda_function.ema_trading[0].arn : data.aws_lambda_function.existing[0].arn
+  lambda_function_name = var.existing_lambda_function_name == "" ? aws_lambda_function.ema_trading[0].function_name : data.aws_lambda_function.existing[0].function_name
 }
 
 data "aws_iam_policy_document" "lambda_assume_role" {
@@ -48,8 +60,9 @@ data "aws_iam_policy_document" "lambda_policy_doc" {
 }
 
 resource "aws_iam_role_policy" "lambda_policy" {
+  count  = var.existing_lambda_role_name == "" ? 1 : 0
   name   = "ema_trading_policy"
-  role   = aws_iam_role.lambda_exec.id
+  role   = aws_iam_role.lambda_exec[0].id
   policy = data.aws_iam_policy_document.lambda_policy_doc.json
 }
 
@@ -59,11 +72,17 @@ data "archive_file" "lambda_zip" {
   output_path = "${path.module}/lambda_package.zip"
 }
 
+data "aws_lambda_function" "existing" {
+  count         = var.existing_lambda_function_name != "" ? 1 : 0
+  function_name = var.existing_lambda_function_name
+}
+
 resource "aws_lambda_function" "ema_trading" {
+  count            = var.existing_lambda_function_name == "" ? 1 : 0
   function_name    = "ema_trading_function"
   handler          = "src.lambda_function.handler"
   runtime          = "python3.9"
-  role             = aws_iam_role.lambda_exec.arn
+  role             = local.lambda_role_arn
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
   timeout          = 60
@@ -82,13 +101,13 @@ resource "aws_cloudwatch_event_rule" "schedule" {
 resource "aws_cloudwatch_event_target" "lambda_target" {
   rule      = aws_cloudwatch_event_rule.schedule.name
   target_id = "ema_trading_lambda"
-  arn       = aws_lambda_function.ema_trading.arn
+  arn       = local.lambda_function_arn
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch" {
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.ema_trading.function_name
+  function_name = local.lambda_function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.schedule.arn
 }

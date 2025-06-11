@@ -17,8 +17,22 @@ jobs:
       - name: Terraform Init
         run: terraform -chdir=terraform init
 
+      - name: Import existing resources
+        if: env.EXISTING_LAMBDA_ROLE != '' || env.EXISTING_LAMBDA_FUNCTION != ''
+        env:
+          EXISTING_LAMBDA_ROLE: ${{ secrets.EXISTING_LAMBDA_ROLE }}
+          EXISTING_LAMBDA_FUNCTION: ${{ secrets.EXISTING_LAMBDA_FUNCTION }}
+        run: |
+          if [ -n "$EXISTING_LAMBDA_ROLE" ]; then
+            terraform -chdir=terraform import aws_iam_role.lambda_exec "$EXISTING_LAMBDA_ROLE"
+            terraform -chdir=terraform import aws_iam_role_policy.lambda_policy "$EXISTING_LAMBDA_ROLE"
+          fi
+          if [ -n "$EXISTING_LAMBDA_FUNCTION" ]; then
+            terraform -chdir=terraform import aws_lambda_function.ema_trading "$EXISTING_LAMBDA_FUNCTION"
+          fi
+
       - name: Terraform Apply
-        run: terraform -chdir=terraform apply -auto-approve -var="webull_username=${{ secrets.WEBULL_USERNAME }}" -var="webull_password=${{ secrets.WEBULL_PASSWORD }}" -var="aws_access_key_id=${{ secrets.AWS_KEY_ID }}" -var="aws_secret_access_key=${{ secrets.AWS_SECRET }}"
+        run: terraform -chdir=terraform apply -auto-approve -var="webull_username=${{ secrets.WEBULL_USERNAME }}" -var="webull_password=${{ secrets.WEBULL_PASSWORD }}" -var="aws_access_key_id=${{ secrets.AWS_KEY_ID }}" -var="aws_secret_access_key=${{ secrets.AWS_SECRET }}" -var="existing_lambda_role_name=${{ secrets.EXISTING_LAMBDA_ROLE }}" -var="existing_lambda_function_name=${{ secrets.EXISTING_LAMBDA_FUNCTION }}"
 
   python:
     runs-on: ubuntu-latest

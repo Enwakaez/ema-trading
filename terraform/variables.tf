@@ -23,3 +23,15 @@ variable "aws_secret_access_key" {
   description = "AWS secret access key for API calls"
   type        = string
 }
+
+variable "existing_lambda_role_name" {
+  description = "Name of an existing IAM role for the Lambda function"
+  type        = string
+  default     = ""
+}
+
+variable "existing_lambda_function_name" {
+  description = "Name of an existing Lambda function to reuse"
+  type        = string
+  default     = ""
+}
