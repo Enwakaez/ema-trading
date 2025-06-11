@@ -30,8 +30,8 @@ README.md
 1. **Clone** the repository.
 2. **Set** GitHub Secrets:
    - `SECRET_ARN` - ARN of the AWS Secrets Manager secret containing Webull and AWS credentials
-   - `AWS_KEY_ID`
-   - `AWS_SECRET`
+   - `AWS_ACCESS_KEY_ID`
+   - `AWS_SECRET_ACCESS_KEY`
 3. **Push** to `main`—GitHub Actions will:
    - Initialize and apply Terraform (using existing Secrets Manager secret).
    - Deploy the Lambda function.
