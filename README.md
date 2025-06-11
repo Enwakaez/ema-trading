@@ -33,7 +33,9 @@ README.md
    - `AWS_ACCESS_KEY_ID`
    - `AWS_SECRET_ACCESS_KEY`
 3. **Push** to `main`—GitHub Actions will:
-   - Initialize and apply Terraform (using existing Secrets Manager secret).
+   - Import existing Lambda, IAM role, and CloudWatch schedule by name
+     before applying Terraform.
+   - Initialize and apply Terraform (using the provided Secrets Manager ARN).
    - Deploy the Lambda function.
 
 ### Provisioning Secrets
@@ -42,6 +44,18 @@ Terraform expects a pre-existing Secrets Manager secret with those values. Pass 
 ```bash
 terraform init
 terraform apply -var="secret_arn=${SECRET_ARN}"
+```
+
+### Importing Existing Resources
+
+If the Lambda function, IAM role, or CloudWatch schedule already exist,
+Terraform can import them by name. The CI workflow performs these imports
+automatically, but you may also run them locally:
+
+```bash
+terraform import aws_lambda_function.ema_trading ema_trading_function
+terraform import aws_iam_role.lambda_exec ema_trading_lambda_exec
+terraform import aws_cloudwatch_event_rule.schedule ema_trading_schedule
 ```
 
 ## Usage
