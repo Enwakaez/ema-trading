@@ -29,26 +29,19 @@ README.md
 
 1. **Clone** the repository.
 2. **Set** GitHub Secrets:
-   - `WEBULL_USERNAME`
-   - `WEBULL_PASSWORD`
+   - `SECRET_ARN` - ARN of the AWS Secrets Manager secret containing Webull and AWS credentials
    - `AWS_KEY_ID`
    - `AWS_SECRET`
 3. **Push** to `main`—GitHub Actions will:
-   - Initialize and apply Terraform (creating Secrets Manager secret).
+   - Initialize and apply Terraform (using existing Secrets Manager secret).
    - Deploy the Lambda function.
 
 ### Provisioning Secrets
 
-The Terraform setup will create an AWS Secrets Manager secret named `webull_credentials` containing:
-- `WEBULL_USERNAME`
-- `WEBULL_PASSWORD`
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
-
-Provide these via Terraform vars (GitHub Actions):
+Terraform expects a pre-existing Secrets Manager secret with those values. Pass its ARN during apply:
 ```bash
 terraform init
-terraform apply   -var="webull_username=${{ secrets.WEBULL_USERNAME }}"   -var="webull_password=${{ secrets.WEBULL_PASSWORD }}"   -var="aws_access_key_id=${{ secrets.AWS_KEY_ID }}"   -var="aws_secret_access_key=${{ secrets.AWS_SECRET }}"
+terraform apply -var="secret_arn=${SECRET_ARN}"
 ```
 
 ## Usage

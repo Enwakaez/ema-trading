@@ -27,7 +27,7 @@ jobs:
         run: terraform -chdir=terraform init
 
       - name: Terraform Apply
-        run: terraform -chdir=terraform apply -auto-approve -var="webull_username=${{ secrets.WEBULL_USERNAME }}" -var="webull_password=${{ secrets.WEBULL_PASSWORD }}" -var="aws_access_key_id=${{ secrets.AWS_KEY_ID }}" -var="aws_secret_access_key=${{ secrets.AWS_SECRET }}"
+        run: terraform -chdir=terraform apply -auto-approve -var="secret_arn=${{ secrets.SECRET_ARN }}"
 
   python:
     runs-on: ubuntu-latest
