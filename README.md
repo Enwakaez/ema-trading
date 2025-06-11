@@ -44,7 +44,6 @@ Terraform expects a pre-existing Secrets Manager secret with those values. Pass 
 ```bash
 terraform init
 terraform apply -var="secret_arn=${SECRET_ARN}"
-```
 
 ### Importing Existing Resources
 
@@ -56,7 +55,7 @@ automatically, but you may also run them locally:
 terraform import aws_lambda_function.ema_trading ema_trading_function
 terraform import aws_iam_role.lambda_exec ema_trading_lambda_exec
 terraform import aws_cloudwatch_event_rule.schedule ema_trading_schedule
-```
+
 
 ## Usage
 
